@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shadow Alley – Mini‑Prototyp</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div id="hud">
+        Level: <span class="kbd" id="levelCount"></span> · Fische:
+        <span class="kbd" id="fishCount"></span> · <span id="doorState"></span>
+      </div>
+      <canvas
+        id="game"
+        width="480"
+        height="320"
+        aria-label="Shadow Alley"
+      ></canvas>
+      <div id="tutorial" class="hint"></div>
+      <div
+        id="levelSelectWrapper"
+        class="hint"
+        style="margin-top: 6px; text-align: center"
+      >
+        <label for="levelSelect">Level auswählen:</label>
+        <select id="levelSelect" class="kbd" style="min-width: 140px"></select>
+      </div>
+      <div class="hint">
+        Steuerung: <span class="kbd">WASD</span>/<span class="kbd">Pfeile</span>
+        · Neustart: <span class="kbd">R</span> · Ton: <span class="kbd">M</span>
+      </div>
+    </div>
+
+    <script src="levels.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

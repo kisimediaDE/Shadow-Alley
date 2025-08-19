@@ -1,0 +1,28 @@
+{
+  "name": "shadow-alley",
+  "version": "1.0.0",
+  "description": "",
+  "main": "game.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kisimediaDE/Shadow-Alley.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/kisimediaDE/Shadow-Alley/issues"
+  },
+  "homepage": "https://github.com/kisimediaDE/Shadow-Alley#readme",
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.43.1",
+    "yazl": "^3.3.1"
+  }
+}
