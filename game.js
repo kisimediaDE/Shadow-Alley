@@ -13,6 +13,8 @@ let levelIndex = 0;
 
 // Level selection UI (only unlocked selectable)
 const levelSelect = document.getElementById("levelSelect");
+const levelSelectWrapper = document.getElementById("levelSelectWrapper");
+const hud = document.getElementById("hud");
 
 function refreshLevelSelect() {
   if (!levelSelect) return;
@@ -124,6 +126,8 @@ let toCollect = 0,
   youWin = false,
   allDone = false; // final end screen when last level is completed
 
+let showStart = true; // show start screen until player begins
+
 function parseLevel(str) {
   walls.length =
     shadows.length =
@@ -219,6 +223,14 @@ refreshLevelSelect();
 const keys = Object.create(null);
 addEventListener("keydown", (e) => {
   keys[e.key] = true;
+  if (showStart && (e.key === "Enter" || e.key === " " || e.code === "Space")) {
+    showStart = false;
+    ensureAudio();
+    resumeAudio();
+    levelSelectWrapper.style.opacity = "1";
+    hud.style.opacity = "1";
+    return; // consume this key for starting
+  }
   if (!started) ensureAudio();
   if (e.key === "m" || e.key === "M") setMuted(!muted);
   if (e.key === "r" || e.key === "R") {
@@ -641,7 +653,90 @@ function startMelody() {
   schedule();
 }
 
+function renderStartScreen() {
+  levelSelectWrapper.style.opacity = "0";
+  hud.style.opacity = "0";
+  pauseAudio();
+  // Background gradient
+  ctx.clearRect(0, 0, W, H);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#0f1420");
+  g.addColorStop(1, "#0b0e17");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // Soft vignette
+  const vg = ctx.createRadialGradient(
+    W / 2,
+    H / 2,
+    20,
+    W / 2,
+    H / 2,
+    Math.max(W, H) * 0.7
+  );
+  vg.addColorStop(0, "rgba(0,0,0,0)");
+  vg.addColorStop(1, "rgba(0,0,0,0.55)");
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Title / Logo
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#dbe0ea";
+  ctx.font = "bold 28px system-ui, sans-serif";
+  ctx.fillText("🐾 Shadow Alley 🐾", W / 2, 72);
+
+  // Little cat silhouette under the title (simple shape)
+  ctx.save();
+  ctx.translate(W / 2, 100);
+  ctx.fillStyle = "#0b0d12";
+  ctx.beginPath();
+  ctx.ellipse(0, 8, 22, 12, 0, 0, Math.PI * 2); // body
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(14, 2, 6, 0, Math.PI * 2); // head
+  ctx.fill();
+  ctx.beginPath(); // ears
+  ctx.moveTo(10.5, -1.5);
+  ctx.lineTo(12.5, -6.5);
+  ctx.lineTo(14, -1.5);
+  ctx.closePath();
+  ctx.moveTo(17.5, -1.5);
+  ctx.lineTo(15.5, -6.5);
+  ctx.lineTo(14, -1.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath(); // tail
+  ctx.moveTo(-18, 6);
+  ctx.quadraticCurveTo(-28, -2, -12, -6);
+  ctx.strokeStyle = "#0b0d12";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+
+  // Short story
+  ctx.fillStyle = "#b7c3d6";
+  ctx.font = "13px system-ui, sans-serif";
+  const lines = [
+    "The city never sleeps. Rain falls, lamps flicker, and dogs guard the alleys.",
+    "You are a lone black cat, hungry and unseen.",
+    "Sneak through the night, gather fish to survive,",
+    "and escape through the glowing door before the light finds you.",
+  ];
+  let y = 170;
+  for (const L of lines) {
+    ctx.fillText(L, W / 2, y);
+    y += 18;
+  }
+
+  // Start hint
+  ctx.fillStyle = "#5fd08a";
+  ctx.font = "bold 14px system-ui, sans-serif";
+  ctx.fillText("Press Enter or Space to begin", W / 2, H - 36);
+  ctx.textAlign = "left";
+}
+
 function update(dt) {
+  if (showStart) return; // no game updates until started
   if (gameOver || youWin || allDone) {
     // Auto-advance if win
     if (youWin && winAdvanceAt != null && time >= winAdvanceAt) {
@@ -1632,6 +1727,10 @@ function render() {
   if (progress.current !== levelIndex) {
     progress.current = levelIndex;
     saveProgress();
+  }
+  if (showStart) {
+    renderStartScreen();
+    return;
   }
   // Night bg
   ctx.clearRect(0, 0, W, H);
