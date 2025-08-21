@@ -27,7 +27,7 @@ async function build() {
         passes: 3,
         drop_console: true,
         drop_debugger: true,
-        hoist_vars: false,
+        hoist_vars: true,
         hoist_funs: true,
         collapse_vars: true,
         reduce_vars: true,
@@ -49,7 +49,18 @@ async function build() {
     const res = await minifyJS(levels, {
       ecma: 2020,
       toplevel: false,
-      compress: { passes: 2, collapse_vars: true, reduce_vars: true },
+      compress: {
+        passes: 3,
+        drop_console: true,
+        drop_debugger: true,
+        hoist_vars: true,
+        hoist_funs: true,
+        collapse_vars: true,
+        reduce_vars: true,
+        unsafe_arrows: true,
+        unsafe_comps: true,
+        booleans_as_integers: true,
+      },
       mangle: { toplevel: false, reserved: ["LEVELS", "TIPS"] },
     });
     minLevels = res.code;
