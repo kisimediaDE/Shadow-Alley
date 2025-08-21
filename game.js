@@ -121,7 +121,8 @@ const bubbles = []; // {x,y,vy,life}
 let toCollect = 0,
   got = 0,
   gameOver = false,
-  youWin = false;
+  youWin = false,
+  allDone = false; // final end screen when last level is completed
 
 function parseLevel(str) {
   walls.length =
@@ -133,6 +134,7 @@ function parseLevel(str) {
   got = 0;
   youWin = false;
   gameOver = false;
+  allDone = false;
   const rows = str.split("\n");
   rows.forEach((row, y) => {
     for (let x = 0; x < row.length; x++) {
@@ -159,7 +161,17 @@ function parseLevel(str) {
           offY: -11,
         });
       else if (ch == "L") {
-        const GUARD_COLORS = ["#cc4455", "#4aa3ff", "#7bd389", "#f2b134"];
+        const GUARD_COLORS = [
+          "#cc4455",
+          "#4aa3ff",
+          "#7bd389",
+          "#f2b134",
+          "#d45ed4",
+          "#ff8c00",
+          "#88cfff",
+          "#00bfff",
+          "#3cb371",
+        ];
         const accent =
           GUARD_COLORS[Math.floor(Math.random() * GUARD_COLORS.length)];
         guards.push({
@@ -209,7 +221,10 @@ addEventListener("keydown", (e) => {
   keys[e.key] = true;
   if (!started) ensureAudio();
   if (e.key === "m" || e.key === "M") setMuted(!muted);
-  if (e.key === "r" || e.key === "R") reset();
+  if (e.key === "r" || e.key === "R") {
+    if (allDone) restartFromStart();
+    else reset();
+  }
   if ((e.key === "n" || e.key === "N") && youWin) nextLevel();
 });
 addEventListener("keyup", (e) => (keys[e.key] = false));
@@ -219,10 +234,28 @@ function reset() {
   doorWasOpen = false;
   winSfxPlayed = false;
   player.vx = player.vy = 0;
+  allDone = false;
   // Persist staying on current level
   progress.current = levelIndex;
   saveProgress();
   refreshLevelSelect();
+  resumeAudio();
+}
+
+function restartFromStart() {
+  const last = LEVELS.length - 1;
+  levelIndex = 0;
+  progress.current = 0; // keep unlocked progress
+  saveProgress();
+  parseLevel(LEVELS[levelIndex]);
+  doorWasOpen = false;
+  winSfxPlayed = false;
+  gameOver = false;
+  youWin = false;
+  allDone = false;
+  winAdvanceAt = null;
+  refreshLevelSelect();
+  resumeAudio();
 }
 
 let winAdvanceAt = null; // time (seconds) when we jump to next level
@@ -246,6 +279,7 @@ function nextLevel() {
   youWin = false;
   winAdvanceAt = null;
   refreshLevelSelect();
+  resumeAudio();
 }
 
 // Helpers
@@ -534,6 +568,22 @@ function setMuted(m) {
   if (master) master.gain.value = muted ? 0 : 0.7;
 }
 
+function pauseAudio() {
+  if (AC) {
+    setTimeout(() => {
+      AC.suspend();
+    }, 500);
+  }
+}
+
+function resumeAudio() {
+  if (AC) {
+    setTimeout(() => {
+      AC.resume();
+    }, 500);
+  }
+}
+
 function startMelody() {
   if (!AC || melOsc) return;
   // Very soft triangle tone with per-note envelope
@@ -592,7 +642,7 @@ function startMelody() {
 }
 
 function update(dt) {
-  if (gameOver || youWin) {
+  if (gameOver || youWin || allDone) {
     // Auto-advance if win
     if (youWin && winAdvanceAt != null && time >= winAdvanceAt) {
       nextLevel();
@@ -837,17 +887,31 @@ function update(dt) {
 
   // Exit if all collected
   if (got === toCollect && inRect(player.x, player.y, exit)) {
-    if (!youWin) {
-      youWin = true;
-      if (started && !winSfxPlayed) {
-        sfx.success();
-        winSfxPlayed = true;
+    if (!youWin && !allDone) {
+      const lastLevel = LEVELS.length - 1;
+      if (levelIndex === lastLevel) {
+        // Final completion → end screen
+        allDone = true;
+        youWin = false; // don't show regular win overlay
+        if (started && !winSfxPlayed) {
+          sfx.success();
+          winSfxPlayed = true;
+        }
+        unlockNext();
+        progress.current = Math.min(progress.unlocked, lastLevel);
+        saveProgress();
+      } else {
+        // Regular level completion → normal win flow
+        youWin = true;
+        if (started && !winSfxPlayed) {
+          sfx.success();
+          winSfxPlayed = true;
+        }
+        if (winAdvanceAt == null) winAdvanceAt = time + 5;
+        unlockNext();
+        progress.current = Math.min(progress.unlocked, LEVELS.length - 1);
+        saveProgress();
       }
-      if (winAdvanceAt == null) winAdvanceAt = time + 1.2; // auto next in ~1.2s
-      // Mark next level unlocked in progress right when we win
-      unlockNext();
-      progress.current = Math.min(progress.unlocked, LEVELS.length - 1);
-      saveProgress();
     }
   }
 }
@@ -1451,8 +1515,8 @@ function drawLamp(l) {
   // Local glow around head (helps readability)
   const gx = hx + 2,
     gy = hy;
-  const grad = ctx.createRadialGradient(gx, gy, 2, gx, gy, 26);
-  grad.addColorStop(0, "rgba(255,236,170,0.35)");
+  const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 12);
+  grad.addColorStop(0, "rgba(255,236,170,0.30)");
   grad.addColorStop(1, "rgba(255,236,170,0.0)");
   ctx.fillStyle = grad;
   ctx.fillRect(hx - 26, hy - 26, 52, 52);
@@ -1683,7 +1747,7 @@ function render() {
   if (levelCountEl)
     levelCountEl.textContent = `${levelIndex + 1}/${LEVELS.length}`;
   if (doorStateEl)
-    doorStateEl.textContent = doorOpen ? "Tür geöffnet" : "Tür geschlossen";
+    doorStateEl.textContent = doorOpen ? "Door open" : "Door closed";
   const tipEl = document.getElementById("tutorial");
   if (tipEl && TIPS[levelIndex] && TIPS[levelIndex].trim() !== "") {
     tipEl.innerHTML =
@@ -1695,12 +1759,21 @@ function render() {
   }
 
   if (gameOver) {
-    overlay("#ffd166", "Entdeckt!", "R für Neustart");
+    pauseAudio();
+    overlay("#ffd166", "Discovered!", "R to Restart");
   } else if (youWin) {
+    pauseAudio();
     overlay(
       "#5fd08a",
-      "Geschafft!",
-      "Alle Fische gesammelt – weiter in 1.2s (Taste N für sofort)"
+      "Well Done!",
+      "All fish collected – continuing in 5s (Press N for instant)"
+    );
+  } else if (allDone) {
+    pauseAudio();
+    overlay(
+      "#9ec5ff",
+      "Thanks for playing!",
+      "Press R to play again from Level 1"
     );
   }
 }

@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Shadow Alley – Mini‑Prototyp</title>
+    <title>Shadow Alley</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="wrap">
       <div id="hud">
-        Level: <span class="kbd" id="levelCount"></span> · Fische:
+        Level: <span class="kbd" id="levelCount"></span> · Fish:
         <span class="kbd" id="fishCount"></span> · <span id="doorState"></span>
       </div>
       <canvas
@@ -24,12 +24,13 @@
         class="hint"
         style="margin-top: 6px; text-align: center"
       >
-        <label for="levelSelect">Level auswählen:</label>
+        <label for="levelSelect">Select Level:</label>
         <select id="levelSelect" class="kbd" style="min-width: 140px"></select>
       </div>
       <div class="hint">
-        Steuerung: <span class="kbd">WASD</span>/<span class="kbd">Pfeile</span>
-        · Neustart: <span class="kbd">R</span> · Ton: <span class="kbd">M</span>
+        Controls: <span class="kbd">WASD</span>/<span class="kbd">Arrows</span>
+        · Restart: <span class="kbd">R</span> · Mute:
+        <span class="kbd">M</span>
       </div>
     </div>
 
