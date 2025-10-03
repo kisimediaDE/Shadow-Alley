@@ -1,8 +1,38 @@
 // --- Shadow Alley – ASCII Level + Light Cones ---
 const cv = document.getElementById("game");
 const ctx = cv.getContext("2d");
-const W = cv.width,
-  H = cv.height;
+
+const BASE_W = 480,
+  BASE_H = 320;
+
+let currentScale = 1;
+
+function resizeCanvas() {
+  const newScale = Math.min(
+    window.innerWidth / BASE_W,
+    window.innerHeight / BASE_H,
+    2.0
+  );
+
+  if (newScale !== currentScale) {
+    currentScale = newScale;
+    cv.width = BASE_W * newScale;
+    cv.height = BASE_H * newScale;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(newScale, newScale);
+  }
+}
+
+resizeCanvas();
+
+let resizeTimeout;
+addEventListener("resize", () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(resizeCanvas, 100);
+});
+
+const W = BASE_W,
+  H = BASE_H;
 
 // Grid / Tiles
 const TILE = 16,
@@ -1038,6 +1068,11 @@ function drawCat(x, y, dir, hidden, step, state, blink) {
   ctx.save();
   ctx.globalAlpha = hidden ? 0.7 : 1;
 
+  ctx.shadowColor = "rgba(255,255,255,0.4)";
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
   const s = 1; // base scale
   const faceX = x + (dir === "R" ? 5 : -5),
     faceY = y - 6;
@@ -1098,7 +1133,7 @@ function drawCat(x, y, dir, hidden, step, state, blink) {
     ctx.stroke();
 
     // Body more upright
-    ctx.fillStyle = "#0b0d12";
+    ctx.fillStyle = hidden ? "#0b0d12" : "#151820";
     ctx.beginPath();
     ctx.ellipse(x, y + 2, 7 * s, 9 * s, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1132,7 +1167,7 @@ function drawCat(x, y, dir, hidden, step, state, blink) {
   } else if (state === "crouch") {
     // Lower profile: flattened body, lowered head, tail straight but low
     const sway = Math.sin(step * Math.PI) * 2 * (dir === "R" ? 1 : -1);
-    ctx.fillStyle = "#0b0d12";
+    ctx.fillStyle = hidden ? "#0b0d12" : "#151820";
     ctx.beginPath();
     ctx.ellipse(x, y + 3, 9 * s, 4.5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1188,7 +1223,7 @@ function drawCat(x, y, dir, hidden, step, state, blink) {
   } else {
     // walk/idle base (original pose)
     const sway = Math.sin(step * Math.PI) * 3 * (dir === "R" ? 1 : -1);
-    ctx.fillStyle = "#0b0d12";
+    ctx.fillStyle = hidden ? "#0b0d12" : "#151820";
     ctx.beginPath();
     ctx.ellipse(x, y + 1, 8 * s, 6 * s, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1446,6 +1481,8 @@ function drawDog(guard) {
   ctx.moveTo(-9.0 * s, -0.6 * s);
   ctx.quadraticCurveTo(-11.6 * s, -4.0 * s + wag, -8.4 * s, -6.8 * s + wag);
   ctx.stroke();
+
+  ctx.shadowBlur = 0;
 
   ctx.restore();
 }
@@ -1746,7 +1783,22 @@ function render() {
 
   // Walls
   ctx.fillStyle = "#0b0d12";
-  for (const w of walls) ctx.fillRect(w.x, w.y, w.w, w.h);
+  for (const w of walls) {
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+
+    // Subtle edge highlight (top-left)
+    ctx.fillStyle = "rgba(95,110,130,0.08)";
+    ctx.fillRect(w.x, w.y, w.w, 1);
+    ctx.fillRect(w.x, w.y, 1, w.h);
+
+    // Subtle shadow (bottom-right)
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(w.x, w.y + w.h - 1, w.w, 1);
+    ctx.fillRect(w.x + w.w - 1, w.y, 1, w.h);
+
+    // Reset für nächste Wand
+    ctx.fillStyle = "#0b0d12";
+  }
 
   // Shadows (safe) – stylized hide tiles
   for (const s of shadows) drawHideTile(s);
