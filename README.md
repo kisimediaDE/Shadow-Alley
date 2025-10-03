@@ -39,6 +39,14 @@ Collect all the fish in each alley and reach the glowing door to progress.
 - Procedural WebAudio sound effects.
 - Works offline, no external assets.
 
+## Play the Game
+
+- 🎮 **Post-Competition Version** (recommended): [shadow-alley.kisimedia.de](https://shadow-alley.kisimedia.de)
+- 🏆 **Original Competition Entry**: [js13kgames.com](https://js13kgames.com/2025/games/shadow-alley)
+
+The post-competition version includes quality-of-life improvements based on 
+user feedback, with better visibility and responsive canvas scaling.
+
 ## 📂 Repository
 
 - `index.html` – Minified playable build for submission.
