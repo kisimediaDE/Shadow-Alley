@@ -1,3 +1,6 @@
+## Version 1.1.1 (October 3, 2025)
+- Fixed UI elements (HUD, level selector, controls) being pushed outside viewport on window resize
+
 ## Version 1.1.0 (October 3, 2025)
 - Dynamic canvas resizing with responsive scaling
 - Enhanced cat visibility with shadow effects
