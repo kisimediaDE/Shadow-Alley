@@ -9,14 +9,19 @@ body {
 .wrap {
   display: grid;
   place-items: center;
-  height: 100%;
+  min-height: 100vh;
+  padding: 20px 12px;
   gap: 12px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 canvas {
   background: #121621;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  max-width: 95vw;
+  max-height: 70vh;
 }
 .hint {
   opacity: 0.8;
